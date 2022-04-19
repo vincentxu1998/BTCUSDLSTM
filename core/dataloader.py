@@ -68,7 +68,13 @@ class DataLoader:
         for window in window_data:
             normalized_window = []
             for col_i in range(window.shape[1]):
-                normalized_col = [((float(p) / float(window[0, col_i])) - 1) for p in window[:, col_i]]
+                # normalized_col = [((float(p) / float(window[0, col_i])) - 1) for p in window[:, col_i]]
+                normalized_col = []
+                for p in window[:, col_i]:
+                    if float(window[0, col_i]) != 0:
+                        normalized_col.append((float(p) / float(window[0, col_i])) - 1)
+                    else:
+                        normalized_col.append(0)
                 normalized_window.append(normalized_col)
             normalized_window = np.array(normalized_window).T # reshape and transpose array back into original multidimensional format
             normalized_data.append(normalized_window)

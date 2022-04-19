@@ -4,6 +4,7 @@
         "train_test_split": 0.8,
         "columns": [
             "Closing Price (USD)",
+
             "active_addresses",
             "hash_rate",
             "btc_left",

@@ -2,6 +2,23 @@ import matplotlib.pyplot as plt
 import logging
 import pandas as pd
 import numpy as np
+import sys
+from datetime import datetime,timezone
+import os
+import pytz
+
+output_dir = 'output'
+tz = pytz.timezone('America/Toronto')
+
+def create_output_directory():
+    now = datetime.now(tz=tz).strftime("output%y-%m-%d:%H:%M:%S")
+    image_output_dir =os.path.join(output_dir, now)
+    if not os.path.exists(image_output_dir):
+        os.makedirs(image_output_dir)
+    return image_output_dir
+
+global image_output_dir
+image_output_dir = create_output_directory()
 
 def plot_training_curves(history):
     train_loss_values = history.history["loss"] #training loss
@@ -15,7 +32,7 @@ def plot_training_curves(history):
     plt.xlabel("Epoch")
     plt.ylabel("MSE Loss")
     plt.title("Training Curves")
-    plt.show() 
+    plt.savefig(os.path.join(image_output_dir, 'training_curve'), dpi=100)
     
 def plot_results(predicted_data, true_data):
     fig = plt.figure(facecolor='white')
@@ -23,10 +40,10 @@ def plot_results(predicted_data, true_data):
     ax.plot(true_data, label='True Data')
     plt.plot(predicted_data, label='Prediction')
     plt.legend()
-    plt.show()
+    plt.savefig(os.path.join(image_output_dir, 'true-vs-predicted'), dpi=100)
 
 def create_trading_strategy(predictions):
-    signal = np.where(predictions > 0, 1, 0)
+    signal = np.where(predictions > 0, 1, -1)
     
     return signal
 
@@ -56,7 +73,7 @@ def compute_returns(df, price_col):
     '''
     new_df = df.copy()
     
-    new_df['mkt_returns'] = new_df[price_col].pct_change()
+    new_df['mkt_returns'] = new_df[price_col].pct_change(1)
     new_df['system_returns'] = new_df['mkt_returns']*new_df['signal']
     
     new_df['system_equity'] = np.cumprod(1+new_df.system_returns) - 1
@@ -66,15 +83,20 @@ def compute_returns(df, price_col):
 
 def plot_returns(df):
     df[['system_equity','mkt_equity']].plot()
-    plt.show()
+    plt.savefig(os.path.join(image_output_dir, 'returns'), dpi=100)
+
 
 def compute_metrics(df):
     new_df = df.copy()
     
-    system_cagr = np.prod(1+new_df.system_returns)**(252/new_df.shape[0])-1
+    new_df['system_equity']=np.cumprod(1+new_df.system_returns) -1
+    system_cagr=(1+new_df.system_equity.tail(n=1))**(252/new_df.shape[0])-1
+    new_df.system_returns= np.log(new_df.system_returns+1)
     system_sharpe = np.sqrt(252)*np.mean(new_df.system_returns)/np.std(new_df.system_returns)
 
-    mkt_cagr = np.prod(1+new_df.mkt_returns)**(252/new_df.shape[0])-1
+    new_df['mkt_equity']=np.cumprod(1+new_df.mkt_returns) -1
+    mkt_cagr=(1+new_df.mkt_equity.tail(n=1))**(252/new_df.shape[0])-1
+    new_df.mkt_returns= np.log(new_df.mkt_returns+1)
     mkt_sharpe = np.sqrt(252)*np.mean(new_df.mkt_returns)/np.std(new_df.mkt_returns)
     
     system_metrics = (system_cagr, system_sharpe)
