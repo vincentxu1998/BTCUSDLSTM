@@ -26,21 +26,24 @@ def plot_training_curves(history):
     epochs = range(1,len(train_loss_values)+1)
     # Plotting training curves
     plt.clf()  
-    plt.plot(train_loss_values, label="Train Loss")
+    plt.plot(train_loss_values, label="Train Loss"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  )
     plt.plot(val_loss_values, label="Val Loss")
     plt.legend()
     plt.xlabel("Epoch")
     plt.ylabel("MSE Loss")
     plt.title("Training Curves")
-    plt.savefig(os.path.join(image_output_dir, 'training_curve'), dpi=100)
+    plt.savefig(os.path.join(image_output_dir, 'training_curve'))
     
 def plot_results(predicted_data, true_data):
-    fig = plt.figure(facecolor='white')
+    fig = plt.figure(facecolor='white', figsize=(100, 50) ,dpi=100)
     ax = fig.add_subplot(111)
-    ax.plot(true_data, label='True Data')
-    plt.plot(predicted_data, label='Prediction')
+    ax.plot(true_data, label='True Data', linewidth=4.0)
+    plt.plot(predicted_data, label='Prediction', linewidth=4.0)
+    plt.xticks(fontsize=88)
+    plt.yticks(fontsize=88)
+    plt.tick_params(width=10)
     plt.legend()
-    plt.savefig(os.path.join(image_output_dir, 'true-vs-predicted'), dpi=100)
+    plt.savefig(os.path.join(image_output_dir, 'true-vs-predicted'))
 
 def create_trading_strategy(predictions):
     signal = np.where(predictions > 0, 1, -1)
@@ -82,7 +85,8 @@ def compute_returns(df, price_col):
     return new_df
 
 def plot_returns(df):
-    df[['system_equity','mkt_equity']].plot()
+    ax = df[['system_equity','mkt_equity']].plot(figsize=(100, 50), linewidth=4.0)
+    ax.tick_params(labelsize=88)
     plt.savefig(os.path.join(image_output_dir, 'returns'), dpi=100)
 
 
