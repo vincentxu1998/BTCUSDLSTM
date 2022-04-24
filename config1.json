@@ -1,12 +1,12 @@
 {
     "data": {
         "filename": "BTCUSD4H.csv",
-        "train_test_split": 0.8,
+        "train_test_split": 0.9,
         "columns": [
             "close"
         ],
         "price_column": "close",
-        "sequence_length": 126,
+        "sequence_length": 63,
         "normalize": true
     },
     "training": {
@@ -22,7 +22,7 @@
             {
                 "type": "LSTM",
                 "units": 100,
-                "seq_len": 126,
+                "seq_len": 63,
                 "num_features": 1,
                 "return_seq": true
             },
