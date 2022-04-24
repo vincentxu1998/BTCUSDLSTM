@@ -3,7 +3,11 @@
         "filename": "BTCUSD4H.csv",
         "train_test_split": 0.9,
         "columns": [
-            "close"
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume"
         ],
         "price_column": "close",
         "sequence_length": 63,
