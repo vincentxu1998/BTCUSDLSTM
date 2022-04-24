@@ -3,9 +3,12 @@ import time
 import logging
 import datetime as dt
 import numpy as np
-from tensorflow.keras.layers import Dense, Dropout, LSTM
+from tensorflow.keras.layers import Dense, Dropout, LSTM, GRU
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.utils import plot_model
+
+from core.utils import image_output_dir
 
 class LSTMTimeSeriesModel:
     '''
@@ -42,12 +45,21 @@ class LSTMTimeSeriesModel:
             elif layer_type == "LSTM":
                 self.model.add(LSTM(units=units, 
                                     activation=activation, 
-                                    input_shape=(seq_len, num_features), 
+                                    input_shape=(seq_len, num_features),
                                     return_sequences=return_seq
                                    ))
+            elif layer_type == "GRU":
+                self.model.add(GRU(units=units,
+                                    activation=activation,
+                                    input_shape=(seq_len, num_features),
+                                    return_sequences=return_seq
+                                    ))
             elif layer_type == "Dropout":
                 self.model.add(Dropout(rate=dropout))
-                
+
+        self.model.summary()
+        plot_model(self.model, image_output_dir + "/model.png", show_shapes=True)
+
         self.model.compile(loss=config['model']['loss'], optimizer=config['model']['optimizer'])
         
         time_taken = time.time() - now    
