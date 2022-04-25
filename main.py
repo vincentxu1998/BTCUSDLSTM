@@ -10,6 +10,7 @@ from core.model import LSTMTimeSeriesModel
 import pandas as pd
 
 
+
 #def main():
     
 '''
@@ -37,11 +38,12 @@ except:
 data = DataLoader(
     os.path.join('data', configs['data']['filename']),
     configs['data']['train_test_split'],
-    configs['data']['columns']
+    configs['data']['columns'],
+    configs['data']['price_column']
 )
 
 # Train x and y
-x, y = data.get_train_data(
+x, y_regressor, y_classifier = data.get_train_data(
     lookback_window=configs['data']['sequence_length'],
     normalize=configs['data']['normalize']
 )
@@ -51,13 +53,13 @@ model = LSTMTimeSeriesModel()
 model.build_model(configs)
 
 # Training the model using the inbuilt method of the LSTMTimeSeriesModel class
-history = model.train(x,y,configs)
+history = model.train(x, y_regressor, y_classifier,configs)
 
 # Plotting the train/val loss curves
 plot_training_curves(history)
 
 # Extracting the x and y test data
-x_test, y_test = data.get_test_data(
+x_test, y_test_regressor, y_test_classifier = data.get_test_data(
     lookback_window=configs['data']['sequence_length'],
     normalize=configs['data']['normalize']
 )
@@ -66,7 +68,7 @@ x_test, y_test = data.get_test_data(
 predictions = model.predict_point_by_point(x_test)
 
 # Plotting the predictions compared to the actual values
-plot_results(predictions, y_test)
+plot_results(predictions, y_test_regressor)
 
 # Using normalized predictions on test set, create a trading strategy
 signal = create_trading_strategy(predictions)

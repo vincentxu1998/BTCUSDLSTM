@@ -6,11 +6,10 @@
             "open",
             "high",
             "low",
-            "close",
-            "volume"
+            "close"
         ],
         "price_column": "close",
-        "sequence_length": 63,
+        "sequence_length": 6,
         "normalize": true
     },
     "training": {
@@ -26,8 +25,8 @@
             {
                 "type": "LSTM",
                 "units": 100,
-                "seq_len": 63,
-                "num_features": 1,
+                "seq_len": 6,
+                "num_features": 4,
                 "return_seq": true
             },
             {
@@ -35,7 +34,12 @@
                 "dropout": 0.05
             },
             {
-                "type": "LSTM",
+                "type": "GRU",
+                "units": 100,
+                "return_seq": true
+            },
+            {
+                "type": "GRU",
                 "units": 100,
                 "return_seq": true
             },
@@ -47,11 +51,6 @@
             {
                 "type": "Dropout",
                 "dropout": 0.05
-            },
-            {
-                "type": "Dense",
-                "units": 1,
-                "activation": "linear"
             }
         ],
         "checkpoint_params": {

@@ -6,7 +6,7 @@ class DataLoader:
     '''
     Dataloader for creating the train and test sets
     '''
-    def __init__(self, dataset_fp, train_size, col_name_list):
+    def __init__(self, dataset_fp, train_size, col_name_list, price_column):
         self.df = pd.read_csv(dataset_fp, infer_datetime_format=True, parse_dates=['Date'], index_col=['Date'])
         self.index_split = int(train_size*len(self.df))
         self.train_df = self.df[col_name_list].iloc[:self.index_split,:]
@@ -15,19 +15,22 @@ class DataLoader:
         self.test_data = self.test_df.values
         self.train_len = len(self.train_data)
         self.test_len = len(self.test_data)
+        self.price_index = self.df.columns.get_loc(price_column)
     
     def get_train_data(self, lookback_window, normalize):
         '''
         Get training data for LSTM
         '''
         data_x = []
-        data_y = []
+        data_y_regressor = []
+        data_y_classifier = []
         for i in range(self.train_len - lookback_window):
-            x, y = self._next_window(i, lookback_window, normalize)
+            x, y_regressor, y_classifier = self._next_window(i, lookback_window, normalize)
             data_x.append(x)
-            data_y.append(y)
+            data_y_regressor.append(y_regressor)
+            data_y_classifier.append(y_classifier)
             
-        return np.array(data_x), np.array(data_y)
+        return np.array(data_x), np.array(data_y_regressor), np.array(data_y_classifier)
     
     def get_test_data(self, lookback_window, normalize):
         '''
@@ -43,9 +46,11 @@ class DataLoader:
         data_windows = self.normalize_windows(data_windows, single_window=False) if normalize else data_windows
 
         x = data_windows[:, :-1]
-        y = data_windows[:, -1, [0]]
+        y_regressor = data_windows[:, -1, 1:4]
+        y_classifier = [ [1,0] if data_windows[i, -2, self.price_index] < data_windows[i, -1, self.price_index] else [0,1]
+                         for i in range(data_windows.shape[0])]
         
-        return x,y
+        return x,y_regressor, np.array(y_classifier)
     
     def _next_window(self, i, lookback_window, normalize):
         '''
@@ -54,10 +59,12 @@ class DataLoader:
         
         window = self.train_data[i:i+lookback_window]
         window = self.normalize_windows(window, single_window=True)[0] if normalize else window
-        x = window[:-1]
-        y = window[-1, [0]]
-        
-        return x, y
+        x = window[:-1, :]
+        y_regressor = window[-1, 1:4]
+
+        y_classifier = [1, 0] if window[-2, self.price_index] < window[-1, self.price_index] else [0,1]
+
+        return x, y_regressor, y_classifier
     
     def normalize_windows(self, window_data, single_window=False):
         '''

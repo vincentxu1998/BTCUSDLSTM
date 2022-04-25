@@ -35,18 +35,24 @@ def plot_training_curves(history):
     plt.savefig(os.path.join(image_output_dir, 'training_curve'))
     
 def plot_results(predicted_data, true_data):
+    predicted_regressor = predicted_data[0]
+    predicted_classifier = predicted_data[1]
     fig = plt.figure(facecolor='white', figsize=(100, 50) ,dpi=100)
     ax = fig.add_subplot(111)
-    ax.plot(true_data, label='True Data', linewidth=4.0)
-    plt.plot(predicted_data, label='Prediction', linewidth=4.0)
+    ax.plot(true_data[:,2], label='True Data', linewidth=4.0)
+    plt.plot(predicted_regressor[:,0], label='Prediction_High', linewidth=4.0)
+    plt.plot(predicted_regressor[:,1], label='Prediction_Low', linewidth=4.0)
+    plt.plot(predicted_regressor[:,2], label='Prediction_Close', linewidth=4.0)
     plt.xticks(fontsize=88)
     plt.yticks(fontsize=88)
     plt.tick_params(width=10)
-    plt.legend()
+    plt.legend(fontsize=88)
     plt.savefig(os.path.join(image_output_dir, 'true-vs-predicted'))
 
 def create_trading_strategy(predictions):
-    signal = np.where(predictions > 0, 1, -1)
+    predicted_regressor = predictions[0]
+    predicted_classifier = predictions[1]
+    signal = np.where(predicted_regressor[:, 2] > 0, 1, -1)
     
     return signal
 

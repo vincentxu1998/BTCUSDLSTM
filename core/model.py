@@ -3,7 +3,8 @@ import time
 import logging
 import datetime as dt
 import numpy as np
-from tensorflow.keras.layers import Dense, Dropout, LSTM, GRU
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Dense, Dropout, LSTM, GRU, Input
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.utils import plot_model
@@ -15,8 +16,8 @@ class LSTMTimeSeriesModel:
     Class for building the LSTM
     '''
     def __init__(self):
-        self.model = Sequential()
-    
+        self.model = None
+
     def load_model(self, filepath):
         '''
         Loading the model from a filepath
@@ -30,7 +31,10 @@ class LSTMTimeSeriesModel:
         '''
         logging.info("[MODEL]: Building model...")
         now = time.time()
-
+        #
+        # input_layer = Input(shape=(None,))
+        bottom = Sequential()
+        # bottom.add(input_layer)
         for layer in config['model']['layers']:
             units = layer['units'] if 'units' in layer else None
             dropout = layer['dropout'] if 'dropout' in layer else None
@@ -41,31 +45,45 @@ class LSTMTimeSeriesModel:
             return_seq = layer['return_seq'] if 'return_seq' in layer else None
             
             if layer_type == 'Dense':
-                self.model.add(Dense(units=units, activation=activation))
+                bottom.add(Dense(units=units, activation=activation))
             elif layer_type == "LSTM":
-                self.model.add(LSTM(units=units, 
+                bottom.add(LSTM(units=units,
                                     activation=activation, 
                                     input_shape=(seq_len, num_features),
                                     return_sequences=return_seq
                                    ))
             elif layer_type == "GRU":
-                self.model.add(GRU(units=units,
+                bottom.add(GRU(units=units,
                                     activation=activation,
                                     input_shape=(seq_len, num_features),
                                     return_sequences=return_seq
                                     ))
             elif layer_type == "Dropout":
-                self.model.add(Dropout(rate=dropout))
+                bottom.add(Dropout(rate=dropout))
+
+        regressor_output = Dense(3, activation='tanh', name='regressor') (bottom.output)
+        classfier_output = Dense(2, activation='softmax', name='classifier') (bottom.output)
+
+        self.model = Model(inputs=bottom.input, outputs=[
+            # bottom.output,
+            regressor_output,
+            classfier_output
+        ])
 
         self.model.summary()
         plot_model(self.model, image_output_dir + "/model.png", show_shapes=True)
 
-        self.model.compile(loss=config['model']['loss'], optimizer=config['model']['optimizer'])
+        self.model.compile(loss={
+            # 'dense': config['model']['loss'],
+            'regressor': config['model']['loss'],
+            'classifier': 'categorical_crossentropy'
+        },
+                           optimizer=config['model']['optimizer'])
         
         time_taken = time.time() - now    
         logging.info(f"Model Building complete in {time_taken//60} min and {(time_taken % 60):.1f} s")
     
-    def train(self, x_train, y_train, config):
+    def train(self, x_train, y_train_regressor, y_train_classifier, config):
         '''
         Function to train model
         '''
@@ -82,7 +100,11 @@ class LSTMTimeSeriesModel:
         logging.info("[MODEL]: Training started")
         history = self.model.fit(
                     x_train,
-                    y_train,
+            # y_train_regressor,
+                    {
+                        'regressor': y_train_regressor,
+                        'classifier': y_train_classifier
+                    },
                     epochs=epochs,
                     batch_size=batch_size,
                     validation_split=config["training"]["val_split"],
@@ -100,6 +122,6 @@ class LSTMTimeSeriesModel:
         '''
         logging.info('[MODEL]: Predicting Point-by-Point...')
         predicted = self.model.predict(data)
-        predicted = np.reshape(predicted, (predicted.size,))
+        # predicted = np.reshape(predicted, (predicted.size,))
         
         return predicted
