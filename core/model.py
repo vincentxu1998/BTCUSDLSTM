@@ -71,7 +71,7 @@ class LSTMTimeSeriesModel:
         ])
 
         self.model.summary()
-        plot_model(self.model, image_output_dir + "/model.png", show_shapes=True)
+        plot_model(self.model, os.path.join(image_output_dir,"model.png"), show_shapes=True)
 
         self.model.compile(loss={
             # 'dense': config['model']['loss'],
