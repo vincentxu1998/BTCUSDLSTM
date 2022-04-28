@@ -9,6 +9,7 @@ from ta.momentum import StochasticOscillator, RSIIndicator
 import talib
 import numpy as np
 import gzip
+import talib
 
 
 #scrape data from api
@@ -47,7 +48,18 @@ df_4H.columns = df_4H.columns.droplevel()
 closes = df_4H['close'].fillna(method='pad')
 df_4H = df_4H.apply(lambda x: x.fillna(closes))
 
-df_4H = df_4H[df_4H.index > '2013-10-01']
+n=10
+df_4H['RSI'] = talib.RSI(np.array(df_4H['close']), timeperiod=n)
+df_4H['macd'], df_4H['macdsignal'], df_4H['macdhist'] =  talib.MACD(df_4H['close'], fastperiod=12, slowperiod=26, signalperiod=9)
+df_4H['SAR']=talib.SAR(np.array(df_4H['high']),np.array(df_4H['low']), 0.2,0.2) #Ta-lib stores result to T+1, so the input should be close, high, low at T and open at T+1
+df_4H['ADX']=talib.ADX(np.array(df_4H['high']),np.array(df_4H['low']), np.array(df_4H['close']), timeperiod =n)
+df_4H = df_4H.fillna(0)
+
+df_4H = df_4H[df_4H.index > '2018-10-01']
+df_4H.to_csv("input/BTCUSD4H2018.csv")
+
+
+
 
 df_4Hsmall = df_4H[df_4H.index > '2021-10-01']
 
