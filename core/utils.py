@@ -56,6 +56,17 @@ def create_trading_strategy(predictions):
     
     return signal
 
+def create_trading_strategy2(predictions, close):
+    predicted_regressor = predictions[0]
+    predicted_classifier = predictions[1]
+    close = close.shift(1).fillna(0)
+
+    expected_return = (predicted_regressor[0] -  close) * predicted_classifier[0] - (close- predicted_regressor[1]) * predicted_classifier[1]
+    signal = np.where(expected_return> 0, 1, -1)
+
+    return signal
+
+
 def concatenate_strat_to_test(test_df, trading_signal, seq_len):
     '''
     Concatenates the trading signal to the test_df

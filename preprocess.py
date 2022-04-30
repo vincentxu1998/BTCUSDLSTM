@@ -11,6 +11,8 @@ import numpy as np
 import gzip
 import talib
 
+from core.plot_helper import plot_candle
+
 
 #scrape data from api
 csv_path = 'input/bitstampUSD.csv.gz'
@@ -58,7 +60,7 @@ df_4H = df_4H.fillna(0)
 df_4H = df_4H[df_4H.index > '2018-10-01']
 df_4H.to_csv("input/BTCUSD4H2018.csv")
 
-
+plot_candle(df_4H)
 
 
 df_4Hsmall = df_4H[df_4H.index > '2021-10-01']
